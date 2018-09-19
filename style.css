@@ -1,0 +1,49 @@
+body {
+    margin:0;
+    padding:0;
+    background-color:cornsilk;
+    overflow: hidden;
+}
+
+canvas {
+    margin: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.button {
+border-radius: 14px;
+border: black;
+outline: black;
+padding: 10px 10px; 
+font-size: 21px;
+font-weight: bold;
+color: whitesmoke;
+width: 50%;
+height: 10%;
+background-color: rgb(255, 30, 150);  
+}
+
+.button:active {
+    background-color: rgb(40, 106, 230);
+    transition-duration : 0.4s;
+}
+.dsp {
+    padding:0%;
+    font-size: 120%;
+    font-weight: bold;
+    color:darkblue;
+    text-align: center;	
+}
+
+#cnvcon {
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
+#dspcon {
+    height: 10%;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
