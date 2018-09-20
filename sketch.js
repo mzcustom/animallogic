@@ -12,7 +12,6 @@ let imgSize;
 let cnv;
 let dsp;
 let sols=[];
-let firstRow;
 let backIMG;
 let titleIMG;
 let myButton;
@@ -110,7 +109,6 @@ function mouseReleased () {
 				xRange = cnv.width*(0.26*i+0.04);
 				if (mouseX >= xRange && mouseX <= xRange + imgSize && board[i].length >= 1) {
 					tempInp = board[i][0].name;
-					console.log("mouse click on: board: " + i + "tempInp: " + tempInp);
 					processInput(i);
 				}
 			}
@@ -131,6 +129,13 @@ function renderBoard () {
 		renderCol(board[p]);
 		}
 	}
+
+	// p: property in the board(0-3). board[p] = [Animal in that column] 
+function rePostionCol (p) {
+	for (i=0; i<board[p].length; i++){
+		board[p][i].y = cnv.height*(0.8 - 0.2*(i+1));
+	}
+}
 
 function renderAnimation(i) {
 	let fromX = cnv.width*(0.26*i+0.04);
@@ -166,17 +171,19 @@ function renderAnimation(i) {
 	}, 15);
 }
 
-function checkGameState () {
+function makeFirstRow (bd) {
 	firstRow = [];
 	for (i = 0; i < 4; i++) {
-		if (board[i].length != 0) {
-			firstRow.push(board[i][0].name);
-		}
+		bd[i].length === 0 ? firstRow.push("blank blank") : firstRow.push(bd[i][0].name);
 	}
+	return firstRow;
+}
+
+function checkGameState () {
 	if (solution.length === 16) { 
 		dsp.html("Yay! All animals made it!");
 		playAgain();
-	} else if (solution.length != 0 && !isConnection(solution[solution.length-1], firstRow)) {
+	} else if (solution.length != 0 && !isConnection(solution[solution.length-1], makeFirstRow(board))) {
 		dsp.html("Oh no.. No more choice left!");
 		playAgain();
 	} else {
@@ -197,18 +204,68 @@ function playAgain() {
 	myButton.position((windowWidth - myButton.width)/2, windowHeight/2.2);
 }
 
-// p: property in the board. board[p] => Array of Animal in that column. 
-function rePostionCol (p) {
-	for (i=0; i<board[p].length; i++){
-		board[p][i].y = cnv.height*(0.8 - 0.2*(i+1));
-	}
+function isConnection (aniName, row) {
+	let keys = aniName.split(" ");
+	return row.some(each => {
+			return isSameColorOrType(aniName, each);
+	});
 }
 
-function isConnection (str, col) {
-	let keys = str.split(" ");
-	return col.some(each => {
-			return each.includes(keys[0]) || each.includes(keys[1]);
-	});
+function isSameColorOrType (aniName1, aniName2) {
+	let keys = aniName1.split(" ");
+	return aniName2.includes(keys[0]) || aniName2.includes(keys[1]);
+};
+
+// (aniName, firstRow) => [bool, bool, bool, bool], bool is true if there's connection in that col
+function findConnections (aniName, row) {
+	let connections = [];
+	for (i=0; i<4; i++){
+		isSameColorOrType(aniName, row[i]) ? connections.push("t") : connections.push("f");
+	}
+	return connections;
+}
+
+function solve (bd, currSol) {
+	if (bd === null && currSol === null) {
+		return null;
+	} else if (currSol.length === 0) {
+		let nexts = ["t", "t", "t", "t"];
+		solveNextTurn (bd, currSol, nexts);
+	} else if (currSol.length === 16) {
+		sols.push(currSol);
+		return null;
+	} else {
+		let firstRow = makeFirstRow(bd);
+		let prevAni = currSol[currSol.length-1];
+		if (!isConnection(prevAni, firstRow)) {
+			return null;
+		} else {
+			let nexts = findConnections(prevAni, firstRow);
+			solveNextTurn (bd, currSol, nexts);
+		}
+	} 
+}
+
+function solveNextTurn (bd, currSol, nexts) {
+	let prevBd = JSON.parse(JSON.stringify(bd));
+	let prevCurrSol = currSol.slice();
+	let bds = [];
+	let currSols = [];
+	for (i=0; i<4; i++){
+		bd = JSON.parse(JSON.stringify(prevBd));
+		currSol = prevCurrSol.slice();
+		if (nexts[i] === "t") {
+			currSol.push(bd[i][0].name);
+			currSols.push(currSol);
+			bd[i].shift();
+			bds.push(bd);
+			console.log("currsol : " + currSol + " first in next row : " + bd[0]);
+		} else {
+			currSols.push(null);
+			bds.push(null);
+		}
+	}
+	return solve(bds[0], currSols[0]) || solve(bds[1], currSols[1]) || solve(bds[2], currSols[2]) || solve(bds[3], currSols[3]);
 }
 
 function processInput(boardIndex) {
@@ -223,5 +280,3 @@ function processInput(boardIndex) {
 				setTimeout(() => tempInp = null, 500);
 			}
 }
-
-		
